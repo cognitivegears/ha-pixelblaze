@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.5] - 2026-05-10
+## [0.3.0] - 2026-05-10
+
+First public release. Renamed from the unreleased 0.2.5 in-flight version
+to mark this as the initial HACS-installable cut.
 
 ### Fixed
 
