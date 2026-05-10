@@ -51,8 +51,8 @@ async def test_number_entity_added_when_pattern_introduces_new_control(hass) -> 
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test Pixelblaze",
-        unique_id="pb-test-1",
-        data={"host": "1.2.3.4", CONF_PIXELBLAZE_ID: "pb-test-1"},
+        unique_id="pb:deadbeef",
+        data={"host": "1.2.3.4", CONF_PIXELBLAZE_ID: "pb:deadbeef"},
         options={"disable_beacon_listener": True},
     )
     entry.add_to_hass(hass)
@@ -166,7 +166,8 @@ async def test_diagnostics_redacts_pii(hass, setup_entry) -> None:
     # Host/ip/name/id all redacted.
     serialized = str(diag)
     assert "1.2.3.4" not in serialized
-    assert "pb-test-1" not in serialized
+    assert "pb:deadbeef" not in serialized
+    assert "deadbeef" not in serialized
     assert "Test Pixelblaze" not in serialized or diag["entry"]["title"] == "Test Pixelblaze"
     # Pattern names dropped, count preserved.
     assert "Rainbow" not in serialized
@@ -274,8 +275,8 @@ async def test_client_closed_when_first_refresh_fails(hass) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test Pixelblaze",
-        unique_id="pb-test-1",
-        data={"host": "1.2.3.4", CONF_PIXELBLAZE_ID: "pb-test-1"},
+        unique_id="pb:deadbeef",
+        data={"host": "1.2.3.4", CONF_PIXELBLAZE_ID: "pb:deadbeef"},
         options={"disable_beacon_listener": True},
     )
     entry.add_to_hass(hass)

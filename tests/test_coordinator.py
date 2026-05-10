@@ -23,7 +23,7 @@ async def _build_coordinator(hass) -> PixelblazeDataUpdateCoordinator:
         title="Test",
         data={"host": "1.2.3.4"},
         source="user",
-        unique_id="pb-test-1",
+        unique_id="pb:deadbeef",
         options={},
         discovery_keys={},
         subentries_data=None,

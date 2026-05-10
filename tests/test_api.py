@@ -15,7 +15,7 @@ async def test_connect_and_fetch_state(hass) -> None:
     client = PixelblazeClient(hass, "1.2.3.4")
     await client.async_connect()
     state = await client.async_fetch_state(None)
-    assert state.pixelblaze_id == "pb-test-1"
+    assert state.pixelblaze_id == "deadbeef"
     assert state.name == "Test Pixelblaze"
     assert state.version == "3.30"
     assert state.fps == 60.0

@@ -36,6 +36,31 @@ class _InvalidHostError(ValueError):
     """Raised by ``_clean_host`` when the input is not a usable host string."""
 
 
+def _canonical_device_id(raw: Any) -> str | None:
+    """Normalize a Pixelblaze device id to canonical ``pb:xxxxxxxx`` form.
+
+    Pixelblaze emits its device id in two places that historically used
+    different formats: ``getConfigSettings()['pixelblazeId']`` returns a bare
+    hex string, while UDP beacons carry a ``uint32`` that we render as
+    ``pb:%08x``. Both encode the same 32-bit number; this helper folds them
+    onto a single canonical string so user-flow and discovery dedup against
+    each other via ``_abort_if_unique_id_configured``.
+    """
+    if raw is None:
+        return None
+    if isinstance(raw, int):
+        return f"pb:{raw & 0xFFFFFFFF:08x}"
+    s = str(raw).strip().lower()
+    if not s:
+        return None
+    s = s.removeprefix("pb:")
+    try:
+        n = int(s, 16)
+    except ValueError:
+        return None
+    return f"pb:{n & 0xFFFFFFFF:08x}"
+
+
 def _clean_host(raw: Any) -> str:
     """Validate and normalize a user-provided host string.
 
@@ -119,7 +144,7 @@ class PixelblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Error validating Pixelblaze host")
                 errors["base"] = "unknown"
             else:
-                unique_id = info["pixelblaze_id"] or host
+                unique_id = _canonical_device_id(info["pixelblaze_id"]) or host
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
@@ -156,7 +181,8 @@ class PixelblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: Mapping[str, Any]
     ) -> ConfigFlowResult:
         host = str(discovery_info["host"])
-        device_id = str(discovery_info.get("id") or host)
+        raw_id = discovery_info.get("id")
+        device_id = _canonical_device_id(raw_id) or str(raw_id or host)
         await self.async_set_unique_id(device_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._host = host

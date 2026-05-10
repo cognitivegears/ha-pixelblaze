@@ -14,7 +14,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 from .api import PixelblazeClient, PixelblazeConnectionError
-from .const import CONF_DISABLE_BEACON, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .config_flow import _canonical_device_id
+from .const import (
+    CONF_DISABLE_BEACON,
+    CONF_PIXELBLAZE_ID,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from .coordinator import PixelblazeDataUpdateCoordinator
 from .discovery import async_get_beacon_listener
 from .services import async_setup_services
@@ -53,6 +60,20 @@ async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
     return True
 
 
+def _migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Convert legacy unique_ids to the canonical ``pb:xxxxxxxx`` form.
+
+    Entries created before 0.2.5 stored the raw ``pixelblazeId`` hex string as
+    the entry unique_id, while UDP discovery emits ``pb:xxxxxxxx``. The
+    mismatch caused configured devices to keep appearing under "Discovered".
+    """
+    canonical = _canonical_device_id(entry.unique_id) or _canonical_device_id(
+        entry.data.get(CONF_PIXELBLAZE_ID)
+    )
+    if canonical and entry.unique_id != canonical:
+        hass.config_entries.async_update_entry(entry, unique_id=canonical)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: PixelblazeConfigEntry) -> bool:
     """Set up a Pixelblaze config entry.
 
@@ -60,6 +81,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PixelblazeConfigEntry) -
     function fails after creation. We construct the client first and wrap the
     rest in try/except so a failure mid-setup never leaks an open websocket.
     """
+    _migrate_unique_id(hass, entry)
+
     host = entry.data[CONF_HOST]
     client = PixelblazeClient(hass, host)
 
