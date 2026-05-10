@@ -1,0 +1,24 @@
+{
+  "domain": "pixelblaze",
+  "name": "Pixelblaze",
+  "codeowners": [
+    "@cognitivegears"
+  ],
+  "config_flow": true,
+  "dhcp": [
+    {"hostname": "pixelblaze*"},
+    {"hostname": "pb-*"}
+  ],
+  "documentation": "https://github.com/cognitivegears/ha-pixelblaze#readme",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/cognitivegears/ha-pixelblaze/issues",
+  "loggers": [
+    "pixelblaze"
+  ],
+  "quality_scale": "silver",
+  "requirements": [
+    "pixelblaze-client==1.1.7"
+  ],
+  "version": "0.1.0"
+}

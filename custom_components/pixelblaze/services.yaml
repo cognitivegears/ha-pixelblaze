@@ -1,0 +1,234 @@
+set_variable:
+  name: Set variable
+  description: Set a single exported variable on the active pattern. Numeric values only (number or list of numbers).
+  fields:
+    device_id:
+      name: Device
+      description: Pixelblaze device(s) to target.
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+    name:
+      name: Variable name
+      description: The name of the exported variable on the pattern.
+      required: true
+      example: speed
+      selector:
+        text:
+    value:
+      name: Value
+      description: A number, or a list of numbers (e.g. for an array variable).
+      required: true
+      example: 0.5
+      selector:
+        text:
+
+set_variables:
+  name: Set multiple variables
+  description: Set several exported variables on the active pattern at once. All values must be numeric.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+    values:
+      name: Values
+      description: Mapping of variable names to numeric values.
+      required: true
+      example: '{"speed": 0.4, "intensity": 0.8}'
+      selector:
+        object:
+
+set_pattern:
+  name: Set active pattern
+  description: Activate a pattern by id (preferred) or by name. If multiple patterns share a name, the disambiguated label "Name (idprefix)" must be used.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+    pattern:
+      name: Pattern
+      required: true
+      example: KGksY3JEd
+      selector:
+        text:
+
+next_pattern:
+  name: Next pattern
+  description: Advance to the next pattern in the sequencer.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+
+set_sequencer_mode:
+  name: Set sequencer mode
+  description: Set sequencer mode (off / shuffle_all / playlist).
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+    mode:
+      name: Mode
+      required: true
+      selector:
+        select:
+          options:
+            - off
+            - shuffle_all
+            - playlist
+
+set_color_control:
+  name: Set color control
+  description: Set an HSV color picker on the active pattern.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+    name:
+      name: Control name
+      required: true
+      example: hsvPickerColor
+      selector:
+        text:
+    hue:
+      name: Hue
+      required: true
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.01
+    saturation:
+      name: Saturation
+      required: true
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.01
+    brightness:
+      name: Brightness
+      required: true
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.01
+
+run_playlist:
+  name: Run playlist
+  description: >-
+    Switch the sequencer into playlist mode. v1 limitation: only the default playlist
+    (_defaultplaylist_) is supported. Selecting a non-default playlist by id will fail
+    with a clear error rather than silently load the wrong playlist.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+    playlist_id:
+      name: Playlist id
+      required: false
+      default: _defaultplaylist_
+      selector:
+        text:
+
+refresh_pattern_list:
+  name: Refresh pattern list
+  description: Force a refresh of the cached pattern list (call after editing patterns via the Pixelblaze web UI). Picks up new/renamed patterns on the next coordinator poll.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+
+activate_scene:
+  name: Activate scene
+  description: >-
+    Atomically apply a pattern, brightness, variables, and/or sequencer mode in
+    a single call. Useful for "scene" automations where you'd otherwise chain
+    set_pattern + set_variables + light.turn_on and risk seeing intermediate
+    state. At least one of pattern/brightness/variables/sequencer_mode is required.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true
+    pattern:
+      name: Pattern
+      description: Pattern id or name (or disambiguated label "Name (idprefix)" when names collide).
+      required: false
+      example: "Slow Color"
+      selector:
+        text:
+    brightness:
+      name: Brightness
+      description: Pixelblaze brightness slider value (0.0–1.0).
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.01
+    variables:
+      name: Variables
+      description: Mapping of exported variable names to numeric values.
+      required: false
+      example: '{"speed": 0.4, "intensity": 0.8}'
+      selector:
+        object:
+    sequencer_mode:
+      name: Sequencer mode
+      required: false
+      selector:
+        select:
+          options:
+            - off
+            - shuffle_all
+            - playlist
+
+get_variables:
+  name: Get variables
+  description: >-
+    Read the active pattern's exported variables. Returns a response with a
+    "devices" map keyed by device_id; each value is the variable dict for that
+    device. Useful for templating in automations.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: pixelblaze
+          multiple: true

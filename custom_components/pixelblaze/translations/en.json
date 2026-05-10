@@ -1,0 +1,120 @@
+{
+  "title": "Pixelblaze",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect a Pixelblaze",
+        "description": "Enter the IP address or hostname of your Pixelblaze.",
+        "data": {
+          "host": "Host",
+          "name": "Name (optional)"
+        },
+        "data_description": {
+          "host": "IP address or hostname (e.g. 192.168.1.42 or pixelblaze.local).",
+          "name": "Optional friendly name. Defaults to the device's configured name."
+        }
+      },
+      "discovery_confirm": {
+        "title": "Pixelblaze discovered",
+        "description": "Found Pixelblaze {name} at {host}. Add it to Home Assistant?"
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Pixelblaze",
+        "description": "Update the host for this Pixelblaze.",
+        "data": {
+          "host": "Host"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This Pixelblaze is already configured.",
+      "cannot_connect": "Failed to connect.",
+      "reauth_successful": "Reauthentication was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Pixelblaze options",
+        "data": {
+          "scan_interval": "Polling interval (seconds)",
+          "disable_beacon_listener": "Disable UDP auto-discovery"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll the device for state. Lower values are more responsive but use more bandwidth.",
+          "disable_beacon_listener": "Disable the UDP beacon listener used for automatic discovery. Useful if port 1889 conflicts with other software."
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "pattern": {"name": "Pattern"},
+      "sequencer_mode": {
+        "name": "Sequencer mode",
+        "state": {
+          "off": "Off",
+          "shuffle_all": "Shuffle all",
+          "playlist": "Playlist"
+        }
+      }
+    },
+    "switch": {
+      "sequencer": {"name": "Sequencer"}
+    },
+    "button": {
+      "next_pattern": {"name": "Next pattern"},
+      "reboot": {"name": "Reboot"}
+    },
+    "sensor": {
+      "fps": {"name": "Frames per second"},
+      "uptime": {"name": "Uptime"},
+      "version": {"name": "Firmware version"},
+      "storage_used": {"name": "Storage used"},
+      "storage_size": {"name": "Storage size"},
+      "led_count": {"name": "LED count"},
+      "ip": {"name": "IP address"}
+    },
+    "update": {
+      "firmware": {"name": "Firmware"}
+    }
+  },
+  "services": {
+    "set_variable": {
+      "name": "Set variable",
+      "description": "Set a single exported variable on the active pattern."
+    },
+    "set_variables": {
+      "name": "Set multiple variables",
+      "description": "Set several exported variables on the active pattern at once."
+    },
+    "set_pattern": {
+      "name": "Set active pattern",
+      "description": "Activate a pattern by id or name."
+    },
+    "next_pattern": {
+      "name": "Next pattern",
+      "description": "Advance to the next pattern."
+    },
+    "set_sequencer_mode": {
+      "name": "Set sequencer mode",
+      "description": "Set the sequencer mode."
+    },
+    "set_color_control": {
+      "name": "Set color control",
+      "description": "Set an HSV color picker on the active pattern."
+    },
+    "run_playlist": {
+      "name": "Run playlist",
+      "description": "Switch to playlist mode for the given playlist id."
+    },
+    "refresh_pattern_list": {
+      "name": "Refresh pattern list",
+      "description": "Force a refresh of the cached pattern list."
+    }
+  }
+}

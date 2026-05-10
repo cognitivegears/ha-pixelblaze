@@ -1,0 +1,51 @@
+name: HACS Validation
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v6
+      # Skip metadata mutation on PRs and forks; this requires elevated permissions.
+      - name: Ensure repository metadata (description, topics)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const desiredDescription = "Pixelblaze WiFi LED controller integration for Home Assistant (HACS)";
+            const desiredTopics = ["hacs","home-assistant","integration","custom-component","pixelblaze","leds","ws2812","led-strip"];
+            try {
+              const { data: repoData } = await github.rest.repos.get({ owner, repo });
+              if (!repoData.description || repoData.description.trim() === "") {
+                core.info("Setting repository description for HACS validation...");
+                await github.rest.repos.update({ owner, repo, description: desiredDescription });
+              }
+              const { data: topics } = await github.rest.repos.getAllTopics({ owner, repo });
+              const current = new Set(topics.names || []);
+              let updated = false;
+              for (const t of desiredTopics) { if (!current.has(t)) { current.add(t); updated = true; } }
+              if (updated) {
+                core.info("Adding required repository topics for HACS validation...");
+                await github.rest.repos.replaceAllTopics({ owner, repo, names: Array.from(current) });
+              }
+            } catch (e) {
+              core.warning(`Skipping metadata update due to permissions: ${e.message}`);
+            }
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration
+          ignore: brands

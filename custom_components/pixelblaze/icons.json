@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "select": {
+      "pattern": {"default": "mdi:palette"},
+      "sequencer_mode": {"default": "mdi:playlist-play"}
+    },
+    "sensor": {
+      "fps": {"default": "mdi:speedometer"},
+      "uptime": {"default": "mdi:timer-outline"},
+      "version": {"default": "mdi:tag-outline"},
+      "storage_used": {"default": "mdi:database"},
+      "storage_size": {"default": "mdi:database-outline"},
+      "led_count": {"default": "mdi:led-strip-variant"},
+      "ip": {"default": "mdi:ip-network"}
+    },
+    "switch": {
+      "sequencer": {"default": "mdi:shuffle-variant"}
+    },
+    "button": {
+      "next_pattern": {"default": "mdi:skip-next"},
+      "reboot": {"default": "mdi:restart"}
+    }
+  },
+  "services": {
+    "set_variable": "mdi:variable",
+    "set_variables": "mdi:variable-box",
+    "set_pattern": "mdi:palette",
+    "next_pattern": "mdi:skip-next",
+    "set_sequencer_mode": "mdi:playlist-play",
+    "set_color_control": "mdi:eyedropper-variant",
+    "run_playlist": "mdi:playlist-music",
+    "refresh_pattern_list": "mdi:refresh"
+  }
+}

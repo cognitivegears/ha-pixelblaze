@@ -1,0 +1,67 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scans weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit pip-audit
+
+      - name: Bandit - Python security linting
+        run: |
+          # Severity gate: -lll fails on HIGH severity findings only.
+          # JSON report is uploaded as SARIF later; we run twice (once for the
+          # gate, once for the report) so the report always exists even when
+          # the gate fails.
+          bandit -r custom_components/pixelblaze -f json -o bandit-report.json || true
+          bandit -r custom_components/pixelblaze -lll
+
+      - name: pip-audit - Dependency audit
+        run: |
+          pip-audit --format json --output pip-audit-report.json || true
+          pip-audit
+
+      - name: Upload SARIF reports
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: |
+            bandit-report.json
+            pip-audit-report.json
+        continue-on-error: true

@@ -1,0 +1,211 @@
+[project]
+name = "ha-pixelblaze"
+version = "0.1.0"
+description = "Home Assistant custom integration for Pixelblaze WiFi LED controllers"
+readme = "README.md"
+requires-python = ">=3.13.2"
+dependencies = [
+  "pixelblaze-client==1.1.7",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["custom_components*", "scripts*"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.0.0",
+    "pytest-homeassistant-custom-component==0.13.314",
+    "pytest-cov==7.0.0",
+    "mypy==1.19.1",
+    "ruff==0.15.1",
+    "pre-commit==4.5.1",
+    "safety==3.7.0",
+    "bandit==1.9.3",
+    "pip-audit==2.10.0",
+]
+security = [
+  "safety==3.7.0",
+  "bandit==1.9.3",
+  "pip-audit==2.10.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q -m 'not integration'"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+  "integration: tests requiring HA runtime and network sockets",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "I",      # isort
+    "N",      # pep8-naming
+    "PERF",   # perflint
+    "RUF",    # ruff-specific rules
+    "C4",     # flake8-comprehensions
+    "T10",    # flake8-debugger
+    "T20",    # flake8-print
+    "PYI",    # flake8-pyi
+    "PT",     # flake8-pytest-style
+    "Q",      # flake8-quotes
+    "ERA",    # eradicate
+    "PGH",    # pygrep-hooks
+    "PL",     # pylint
+    "TRY",    # tryceratops
+    "FLY",    # flynt
+    "FURB",   # refurb
+    "LOG",    # flake8-logging-format
+    "S",      # flake8-bandit (security)
+    "G",      # flake8-logging-format
+]
+ignore = [
+    "E501",   # line too long
+    "B008",   # do not perform function calls in argument defaults
+    "C901",   # too complex
+    "PLR0913", # too many arguments
+    "PLR2004", # magic value comparison
+    "FBT001",  # boolean positional arg
+    "FBT002",  # boolean default positional
+    "FBT003",  # boolean positional arg in call
+    "A003",    # class attribute shadows builtin
+    "COM812",  # missing trailing comma
+    "ISC001",  # implicitly concatenated strings
+    "Q000", "Q001", "Q002", "Q003",
+    "S101",    # use of assert
+    "S110",    # try/except/pass
+    "S104",    # binding to all interfaces (we bind 0.0.0.0:1889 intentionally)
+    "T201",    # print
+    "RUF012",  # mutable class attributes
+    "TRY003",  # long messages outside exception class
+    "TRY400",  # use logging.exception
+    "ERA001",  # commented-out code
+    "INP001",  # implicit namespace package
+]
+
+[tool.ruff.lint.per-file-ignores]
+"custom_components/pixelblaze/__init__.py" = ["PLC0415"]
+# N802/N803 are silenced because the _PixelblazeProto Protocol mirrors the
+# upstream pixelblaze-client camelCase API surface verbatim.
+"custom_components/pixelblaze/api.py" = ["PLC0415", "N802", "N803"]
+"tests/conftest.py" = ["N802", "N803"]  # FakePixelblaze mirrors upstream camelCase API
+"tests/**/*" = [
+    "S101", "S311", "T201", "PLR2004", "SLF001", "G004", "B017",
+    "PT011", "PLC0415", "TRY300", "TRY301", "TRY401", "N806",
+    "PLR0915", "PLR0912", "PLR0911", "SIM117", "SIM105",
+    "F401", "F403", "E402", "PLW0603", "PYI036", "RUF022", "B904",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["custom_components.pixelblaze"]
+force-sort-within-sections = true
+
+[tool.black]
+line-length = 100
+target-version = ['py313']
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+# HA's DataUpdateCoordinator.data is typed non-None per its TypeVar, but at
+# runtime it's None until first refresh succeeds. Our defensive None guards
+# are load-bearing — keep them and disable the unreachable check globally
+# rather than litter the entity modules with type-ignore comments.
+warn_unreachable = false
+strict_equality = true
+show_error_codes = true
+pretty = true
+namespace_packages = false
+
+[[tool.mypy.overrides]]
+module = [
+    "pixelblaze.*",
+    "pytest_homeassistant_custom_component.*",
+    "websocket.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disable_error_code = ["import-untyped", "no-untyped-def", "call-overload", "unused-ignore"]
+
+[tool.coverage.run]
+source = ["custom_components/pixelblaze"]
+branch = true
+parallel = true
+sigterm = true
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/conftest.py",
+    "*/__pycache__/*",
+    "scripts/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+]
+show_missing = true
+skip_covered = false
+skip_empty = false
+precision = 2
+fail_under = 80.0
+
+[tool.coverage.html]
+directory = "htmlcov"
+title = "Pixelblaze Integration Coverage Report"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.coverage.json]
+output = "coverage.json"
+
+[dependency-groups]
+dev = [
+    "pytest==9.0.0",
+    "pytest-homeassistant-custom-component==0.13.314",
+    "pytest-cov==7.0.0",
+    "mypy==1.19.1",
+    "ruff==0.15.1",
+    "pre-commit==4.5.1",
+    "safety==3.7.0",
+    "bandit==1.9.3",
+    "pip-audit==2.10.0",
+]

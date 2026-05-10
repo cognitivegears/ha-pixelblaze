@@ -1,0 +1,64 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: todo  # PR to home-assistant/brands required before submission
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: todo
+  discovery: done
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo  # number platform doesn't remove stale entries
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: todo  # pattern select duplicates light effect
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: Upstream pixelblaze-client is synchronous; calls are wrapped via executor with a per-device asyncio.Lock and asyncio.timeout boundaries.
+  inject-websession:
+    status: exempt
+    comment: Upstream library uses websocket-client, not aiohttp. Not applicable.
+  strict-typing: todo
