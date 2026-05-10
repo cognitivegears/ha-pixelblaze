@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Assistant 2026.2 is the first release shipping Python 3.14). Prep for HACS
   default-repository submission.
 
+### Documentation
+
+- Expanded `SECURITY.md` with a section on runtime vs. dev dependencies and
+  why open Dependabot alerts on `uv.lock` (e.g. the upstream `uv`/`pytest`
+  pins HA inherits) do not affect end-user installs.
+
 ## [0.2.4] - 2026-05-10
 
 ### Fixed

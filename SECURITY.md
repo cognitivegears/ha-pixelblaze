@@ -73,3 +73,52 @@ transitive dependency. This integration does not invoke any V8-using code path, 
 dep is unused at runtime; it is present only to satisfy `pixelblaze-client`'s own
 imports. If a vulnerability is identified in `mini-racer` we will track it and report on
 mitigation status.
+
+### Runtime vs. dev dependencies
+
+What HACS installs into your Home Assistant is captured in
+[`custom_components/pixelblaze/manifest.json`](custom_components/pixelblaze/manifest.json):
+
+```json
+"requirements": ["pixelblaze-client==1.1.7"]
+```
+
+That is the **only** package this integration adds to your HA install. Everything else
+that runs alongside it (aiohttp, cryptography, pillow, pyOpenSSL, PyJWT, orjson,
+requests, …) ships with Home Assistant core itself. This integration neither pins nor
+upgrades those packages — updating Home Assistant updates them.
+
+### About Dependabot alerts on `uv.lock`
+
+Dependabot scans `uv.lock`, which captures the **dev/test** environment used by CI to
+run pytest against the same dependency versions Home Assistant ships with. Because that
+environment installs `homeassistant` and `pytest-homeassistant-custom-component`, it
+inherits whatever versions upstream pins. As of writing:
+
+- `homeassistant==2026.2.3` hard-pins `uv==0.9.26`, which has an open advisory.
+- `pytest-homeassistant-custom-component==0.13.316` hard-pins `pytest==9.0.0`, which has
+  an open advisory.
+- The HA install pulls aiohttp, cryptography, pillow, pyOpenSSL, PyJWT, orjson, and
+  requests at exact versions selected by HA core; several of those have open advisories
+  whose patched releases HA has not yet adopted.
+
+We deliberately do not override these pins. Diverging from HA's chosen versions in our
+test environment would defeat the purpose of running tests against the actual versions
+users have, and could mask real integration bugs. Patches are picked up automatically
+when Home Assistant releases a version that bumps the affected packages.
+
+**What is not affected:**
+
+- End-user Home Assistant installs. Users get whatever versions HA core ships in their
+  installed HA release. They are not affected by anything in `uv.lock`.
+- The integration's runtime code path. None of the flagged packages are imported by
+  `custom_components/pixelblaze/`.
+
+Upgrading `homeassistant` to the latest release (currently `2026.5.x`) would patch most
+of these alerts in one shot, but HA 2026.5+ requires Python 3.14.2+, which would force
+us to drop Python 3.13 support. We keep the lower bound at 3.13.2 so the integration
+still installs into older HA releases that some users are still on. We will move the
+floor when we drop 3.13 support intentionally.
+
+If you have a concrete concern about a specific advisory, please open a security
+advisory and we will assess it on the merits.
