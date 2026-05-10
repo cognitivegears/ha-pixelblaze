@@ -24,3 +24,6 @@ coverage.json
 
 # OS
 .DS_Store
+
+# Local review artifacts
+.full-review/
