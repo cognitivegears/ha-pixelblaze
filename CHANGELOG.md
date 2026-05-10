@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-05-10
+
+### Changed
+
+- Bumped `hacs.json` `homeassistant` minimum from `2025.1.0` to `2026.2.0` to
+  match the actual floor implied by `requires-python = ">=3.13.2"` (Home
+  Assistant 2026.2 is the first release shipping Python 3.14). Prep for HACS
+  default-repository submission.
+
 ## [0.2.4] - 2026-05-10
 
 ### Fixed
