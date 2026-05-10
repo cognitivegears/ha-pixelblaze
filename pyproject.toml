@@ -24,7 +24,7 @@ include = ["custom_components*", "scripts*"]
 # (used in CI) reads, and the `[dependency-groups]` block below is what `uv` reads
 # locally. Keep them in lock-step.
 dev = [
-    "pytest==9.0.0",
+    "pytest==9.0.3",
     "pytest-homeassistant-custom-component==0.13.316",
     "pytest-cov==7.0.0",
     "mypy==2.0.0",
@@ -202,7 +202,7 @@ output = "coverage.json"
 
 [dependency-groups]
 dev = [
-    "pytest==9.0.0",
+    "pytest==9.0.3",
     "pytest-homeassistant-custom-component==0.13.316",
     "pytest-cov==7.0.0",
     "mypy==2.0.0",
