@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import callback
-from homeassistant.helpers.entity import EntityCategory
 
 from .entity import PixelblazeEntity
 
@@ -70,9 +69,12 @@ async def async_setup_entry(
 
 
 class PixelblazeControlNumber(PixelblazeEntity, NumberEntity):
-    """A scalar slider exposed by the active Pixelblaze pattern."""
+    """A scalar slider exposed by the active Pixelblaze pattern.
 
-    _attr_entity_category = EntityCategory.CONFIG
+    These are runtime pattern controls, not configuration. They surface as
+    primary entities so the auto-generated device card shows them by default.
+    """
+
     _attr_mode = NumberMode.SLIDER
     _attr_native_min_value = 0.0
     _attr_native_max_value = 1.0

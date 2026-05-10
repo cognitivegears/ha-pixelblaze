@@ -83,6 +83,7 @@ More examples in [docs/automations.md](docs/automations.md).
 | Topic | Details |
 | --- | --- |
 | [Features](docs/features.md) | Full entity and service reference |
+| [Dashboard guide](docs/dashboard.md) | Wiring entities into Lovelace cards |
 | [Configuration](docs/configuration.md) | Options after install |
 | [Automations](docs/automations.md) | Example YAML for common tasks |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues and fixes |

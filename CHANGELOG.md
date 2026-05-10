@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-05-10
+
+### Changed
+
+- Per-pattern slider `number` entities are now primary entities (previously
+  `EntityCategory.CONFIG`). They are runtime user controls, not settings, so
+  they now appear in the auto-generated device card by default.
+
+### Added
+
+- `docs/dashboard.md` — guide to building a Pixelblaze dashboard, with
+  copy-pasteable Lovelace YAML for entities cards, light cards with the
+  effect/pattern picker, tile cards, scene buttons (`activate_scene`), and
+  per-pattern button grids.
+- README links to the new dashboard guide.
+
 ## [0.2.2] - 2026-05-10
 
 No code changes — documentation overhaul.
@@ -160,7 +176,8 @@ Initial public release.
 - Pixelblaze does not advertise mDNS, so zeroconf-style discovery is
   not supported. DHCP and UDP beacon discovery cover the common cases.
 
-[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.1.0...v0.2.0
