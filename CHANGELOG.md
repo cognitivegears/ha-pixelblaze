@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-05-10
+
+No code changes — documentation overhaul.
+
+### Changed
+
+- Rewrote `README.md` to lead with the value proposition, a one-click HACS
+  install badge, a one-click "add integration" badge, and a three-step
+  Getting Started section. Detail moved to `docs/`.
+- Added shields for HACS, Home Assistant version, quality scale, and license.
+- Updated `info.md` (rendered by HACS in the HA UI) to mirror the new README.
+
+### Added
+
+- `docs/features.md` — full entity and service reference plus discovery and
+  diagnostics notes.
+- `docs/configuration.md` — options reference.
+- `docs/automations.md` — example YAML for common tasks.
+- `docs/troubleshooting.md` — connection, discovery, port-conflict, and
+  pattern-collision guidance plus issue-reporting checklist.
+- `docs/limitations.md` — intentional v1 cuts, runtime caveats, and the
+  feature matrix.
+- `docs/manual-install.md` — non-HACS install steps.
+
 ## [0.2.1] - 2026-05-10
 
 No user-facing changes — CI and developer-tooling cleanup.
@@ -136,7 +160,8 @@ Initial public release.
 - Pixelblaze does not advertise mDNS, so zeroconf-style discovery is
   not supported. DHCP and UDP beacon discovery cover the common cases.
 
-[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/cognitivegears/ha-pixelblaze/releases/tag/v0.1.0
