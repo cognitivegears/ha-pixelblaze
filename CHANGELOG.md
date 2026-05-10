@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-10
+
+No user-facing changes — CI and developer-tooling cleanup.
+
+### Changed
+
+- CI workflows (`validate.yml`, `security.yml`) now install pinned dev tools
+  via `pip install -e ".[dev|security]"` instead of pulling unpinned
+  `ruff`/`mypy`/`bandit` from PyPI. The previous unpinned install was
+  picking up newer ruff releases whose added rules (FURB110, UP047)
+  weren't enforced by the version pinned in `pyproject.toml`, breaking
+  `main` on every push.
+- Bumped dev dependencies (Python 3.13 / HA <2026.4 compatible):
+  `ruff` 0.15.1→0.15.12, `mypy` 1.19.1→2.0.0, `bandit` 1.9.3→1.9.4,
+  `pre-commit` 4.5.1→4.6.0, `pytest-homeassistant-custom-component`
+  0.13.314→0.13.316.
+- `actions/github-script` v8→v9 in the HACS workflow.
+- Repo metadata: added the HACS-required topics (`hacs`, `home-assistant`,
+  `integration`, `custom-component`, `pixelblaze`, `leds`, `ws2812`,
+  `led-strip`).
+
+### Fixed
+
+- Lint issues introduced by ruff 0.15.12: replaced a redundant ternary
+  with `or`, and converted `_safe_get` to PEP 695 generic-function
+  syntax (dropping the now-unused `TypeVar`).
+
+### Notes
+
+- `pytest` 9.0.0→9.0.3 (CVE-2025-71176) cannot be applied yet:
+  `pytest-homeassistant-custom-component` 0.13.316 — the latest release
+  that still supports Python 3.13, which Home Assistant uses through
+  2026.3 — hard-pins `pytest==9.0.0` and `pytest-cov==7.0.0`. Versions
+  0.13.317+ require Python 3.14. The Dependabot alert was dismissed as
+  *tolerable risk*: `pytest` is a CI-only dev dep, not shipped to users,
+  and the vulnerability requires local access to the runner's `/tmp`.
+  Will revisit when we bump the integration's Python requirement to
+  3.14.
+
 ## [0.2.0] - 2026-05-10
 
 ### Added
@@ -97,6 +136,7 @@ Initial public release.
 - Pixelblaze does not advertise mDNS, so zeroconf-style discovery is
   not supported. DHCP and UDP beacon discovery cover the common cases.
 
-[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/cognitivegears/ha-pixelblaze/releases/tag/v0.1.0
