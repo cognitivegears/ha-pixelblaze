@@ -32,33 +32,42 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _validate_host_value(raw: Any) -> str:
-    """Validate a user-provided host string.
+class _InvalidHostError(ValueError):
+    """Raised by ``_clean_host`` when the input is not a usable host string."""
+
+
+def _clean_host(raw: Any) -> str:
+    """Validate and normalize a user-provided host string.
 
     Accepts bare IPv4/IPv6 literals and DNS hostnames. Rejects URLs (scheme,
     paths), whitespace, loopback, multicast, link-local, and unspecified
     addresses. Returns the cleaned host (no trailing slash, no surrounding
     brackets on bare IPv6 — brackets are added downstream when constructing
     URLs).
+
+    Implemented as a plain function rather than a voluptuous validator so the
+    config-flow schema stays JSON-serializable: HA's frontend uses
+    ``voluptuous_serialize`` to render the form, and bare callables inside
+    ``vol.All`` blow it up with ``Unable to convert schema``.
     """
     if not isinstance(raw, str):
-        raise vol.Invalid("invalid_host")
+        raise _InvalidHostError("invalid_host")
     host = raw.strip().rstrip("/").strip("[]")
     if not host or "://" in host or any(c in host for c in " \t\r\n?#@"):
-        raise vol.Invalid("invalid_host")
+        raise _InvalidHostError("invalid_host")
     if is_ip_address(host):
         ip = ipaddress.ip_address(host)
         if is_loopback(ip) or is_invalid(ip) or ip.is_multicast or ip.is_link_local:
-            raise vol.Invalid("invalid_host")
+            raise _InvalidHostError("invalid_host")
         return host
     if not is_host_valid(host):
-        raise vol.Invalid("invalid_host")
+        raise _InvalidHostError("invalid_host")
     return host
 
 
 USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): vol.All(str, _validate_host_value),
+        vol.Required(CONF_HOST): str,
         vol.Optional(CONF_DEVICE_NAME, default=""): vol.All(str, vol.Length(max=64)),
     }
 )
@@ -93,7 +102,15 @@ class PixelblazeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]  # already validated by schema
+            try:
+                host = _clean_host(user_input[CONF_HOST])
+            except _InvalidHostError:
+                errors["base"] = "invalid_host"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=USER_SCHEMA,
+                    errors=errors,
+                )
             try:
                 info = await _validate_host(self.hass, host)
             except PixelblazeConnectionError:
@@ -183,29 +200,30 @@ class PixelblazeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input.get(CONF_HOST) or self._host
-            if not host:
+            raw_host = user_input.get(CONF_HOST) or self._host
+            if not raw_host:
                 errors["base"] = "invalid_host"
             else:
                 try:
-                    await _validate_host(self.hass, host)
-                except PixelblazeConnectionError:
-                    errors["base"] = "cannot_connect"
+                    host = _clean_host(raw_host)
+                except _InvalidHostError:
+                    errors["base"] = "invalid_host"
                 else:
-                    entry = self._get_reauth_entry()
-                    self.hass.config_entries.async_update_entry(
-                        entry, data={**entry.data, CONF_HOST: host}
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                    try:
+                        await _validate_host(self.hass, host)
+                    except PixelblazeConnectionError:
+                        errors["base"] = "cannot_connect"
+                    else:
+                        entry = self._get_reauth_entry()
+                        self.hass.config_entries.async_update_entry(
+                            entry, data={**entry.data, CONF_HOST: host}
+                        )
+                        await self.hass.config_entries.async_reload(entry.entry_id)
+                        return self.async_abort(reason="reauth_successful")
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=self._host or ""): vol.All(
-                        str, _validate_host_value
-                    )
-                }
+                {vol.Required(CONF_HOST, default=self._host or ""): str}
             ),
             errors=errors,
         )

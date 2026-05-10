@@ -444,3 +444,24 @@ def test_beacon_parser_smoke() -> None:
     assert info is not None
     assert info["sender_id"] == 0xCAFEBABE
     assert info["name"] == "Lobby"
+
+
+# ---- Config-flow schema must be JSON-serializable ---------------------------
+
+
+def test_user_schema_is_voluptuous_serializable() -> None:
+    """Regression: HA frontend serializes the config-flow schema to JSON.
+
+    A bare callable (e.g. ``_clean_host``) inside ``vol.All`` blows up
+    ``voluptuous_serialize.convert`` with "Unable to convert schema" and
+    surfaces to the user as a 500 from /api/config/config_entries/flow.
+    """
+    from homeassistant.helpers import config_validation as cv
+    import voluptuous_serialize
+
+    from custom_components.pixelblaze.config_flow import USER_SCHEMA
+
+    # Should not raise.
+    result = voluptuous_serialize.convert(USER_SCHEMA, custom_serializer=cv.custom_serializer)
+    assert isinstance(result, list)
+    assert any(field.get("name") == "host" for field in result)

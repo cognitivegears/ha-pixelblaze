@@ -28,7 +28,7 @@ from custom_components.pixelblaze.api import (
     PixelblazeState,
     _build_pattern_labels,
 )
-from custom_components.pixelblaze.config_flow import _validate_host_value
+from custom_components.pixelblaze.config_flow import _clean_host, _InvalidHostError
 from custom_components.pixelblaze.const import BEACON_TYPE_DEVICE, CONF_PIXELBLAZE_ID, DOMAIN
 from custom_components.pixelblaze.discovery import (
     PixelblazeBeaconListener,
@@ -211,13 +211,13 @@ async def test_hung_call_times_out(hass) -> None:
     ],
 )
 def test_validate_host_rejects_bad_input(bad: str) -> None:
-    with pytest.raises(vol.Invalid):
-        _validate_host_value(bad)
+    with pytest.raises(_InvalidHostError):
+        _clean_host(bad)
 
 
 @pytest.mark.parametrize("good", ["192.168.1.42", "10.0.0.1", "pixelblaze.local", "pb-living-room"])
 def test_validate_host_accepts_normal_input(good: str) -> None:
-    assert _validate_host_value(good) == good
+    assert _clean_host(good) == good
 
 
 # ---- H7: pattern label disambiguation ---------------------------------------

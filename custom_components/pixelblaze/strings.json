@@ -28,6 +28,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect.",
+      "invalid_host": "Invalid host. Enter a hostname or IP address.",
       "unknown": "An unexpected error occurred."
     },
     "abort": {
