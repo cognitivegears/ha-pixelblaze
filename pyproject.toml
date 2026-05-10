@@ -20,20 +20,23 @@ where = ["."]
 include = ["custom_components*", "scripts*"]
 
 [project.optional-dependencies]
+# Two pin sources are intentional: this section is what `pip install -e .[dev]`
+# (used in CI) reads, and the `[dependency-groups]` block below is what `uv` reads
+# locally. Keep them in lock-step.
 dev = [
     "pytest==9.0.0",
-    "pytest-homeassistant-custom-component==0.13.314",
+    "pytest-homeassistant-custom-component==0.13.316",
     "pytest-cov==7.0.0",
-    "mypy==1.19.1",
-    "ruff==0.15.1",
-    "pre-commit==4.5.1",
+    "mypy==2.0.0",
+    "ruff==0.15.12",
+    "pre-commit==4.6.0",
     "safety==3.7.0",
-    "bandit==1.9.3",
+    "bandit==1.9.4",
     "pip-audit==2.10.0",
 ]
 security = [
   "safety==3.7.0",
-  "bandit==1.9.3",
+  "bandit==1.9.4",
   "pip-audit==2.10.0",
 ]
 
@@ -200,12 +203,12 @@ output = "coverage.json"
 [dependency-groups]
 dev = [
     "pytest==9.0.0",
-    "pytest-homeassistant-custom-component==0.13.314",
+    "pytest-homeassistant-custom-component==0.13.316",
     "pytest-cov==7.0.0",
-    "mypy==1.19.1",
-    "ruff==0.15.1",
-    "pre-commit==4.5.1",
+    "mypy==2.0.0",
+    "ruff==0.15.12",
+    "pre-commit==4.6.0",
     "safety==3.7.0",
-    "bandit==1.9.3",
+    "bandit==1.9.4",
     "pip-audit==2.10.0",
 ]

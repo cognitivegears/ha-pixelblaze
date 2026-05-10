@@ -20,9 +20,12 @@ jobs:
         with:
           python-version: '3.13'
       - name: Install test deps
+        # Install pinned dev deps from pyproject.toml's [dev] extra so CI sees
+        # the same ruff/mypy/pytest versions as local. Otherwise CI grabs the
+        # latest ruff and fails on rules the pinned version does not enforce.
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-asyncio pytest-cov pytest-homeassistant-custom-component packaging ruff mypy pixelblaze-client==1.1.7
+          pip install -e ".[dev]" packaging
       - name: Check dependency sync (manifest vs pyproject)
         run: |
           python scripts/check_requirements_sync.py

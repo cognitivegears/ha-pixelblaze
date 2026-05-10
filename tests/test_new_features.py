@@ -106,9 +106,7 @@ async def test_activate_scene_atomic(hass, setup_entry_with_device) -> None:
     assert pb.last_set_variables == {"speed": 0.7}
 
 
-async def test_activate_scene_requires_at_least_one_field(
-    hass, setup_entry_with_device
-) -> None:
+async def test_activate_scene_requires_at_least_one_field(hass, setup_entry_with_device) -> None:
     _entry, device = setup_entry_with_device
     with pytest.raises(Exception):  # vol.MultipleInvalid wrapped by HA
         await hass.services.async_call(

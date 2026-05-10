@@ -19,12 +19,10 @@ from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass, field
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
-
-_T = TypeVar("_T")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -344,7 +342,7 @@ class PixelblazeClient:
             led_count=int(cfg.get("pixelCount") or cfg.get("ledCount") or 0),
             brightness=float(brightness or 0.0),
             paused=bool(cfg.get("paused", False)),
-            active_pattern_id=active_id if active_id else None,
+            active_pattern_id=active_id or None,
             active_pattern_name=active_name,
             pattern_list=dict(pattern_list),
             pattern_label_to_id=_build_pattern_labels(pattern_list),
@@ -425,7 +423,7 @@ class PixelblazeClient:
         await self._run("reboot")
 
 
-def _safe_get(getter: Callable[[], _T], default: _T) -> _T:
+def _safe_get[T](getter: Callable[[], T], default: T) -> T:
     """Invoke a zero-arg callable; on any exception, return the default.
 
     The polling pipeline aggregates many independent reads. If one fails

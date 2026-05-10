@@ -222,9 +222,7 @@ class PixelblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(reason="reauth_successful")
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_HOST, default=self._host or ""): str}
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=self._host or ""): str}),
             errors=errors,
         )
 

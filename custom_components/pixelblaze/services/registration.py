@@ -159,6 +159,7 @@ RUN_PLAYLIST_SCHEMA = vol.Schema(
 )
 REFRESH_PATTERN_LIST_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): _DEVICE_IDS})
 
+
 # activate_scene: every field except device_id is optional, but at least one
 # of the optional fields must be provided — an empty scene is a no-op and
 # almost certainly a mistake on the caller's part.
@@ -177,12 +178,8 @@ ACTIVATE_SCENE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(ATTR_DEVICE_ID): _DEVICE_IDS,
-            vol.Optional(ATTR_PATTERN): vol.All(
-                str, vol.Length(min=1, max=_MAX_VALUE_STR_LEN)
-            ),
-            vol.Optional(ATTR_VALUE_BRIGHTNESS): vol.All(
-                _SAFE_NUM, vol.Range(min=0.0, max=1.0)
-            ),
+            vol.Optional(ATTR_PATTERN): vol.All(str, vol.Length(min=1, max=_MAX_VALUE_STR_LEN)),
+            vol.Optional(ATTR_VALUE_BRIGHTNESS): vol.All(_SAFE_NUM, vol.Range(min=0.0, max=1.0)),
             vol.Optional(ATTR_VARIABLES): _validate_var_dict,
             vol.Optional(ATTR_SEQUENCER_MODE): vol.In(list(SEQUENCER_NAME_TO_MODE.keys())),
         }

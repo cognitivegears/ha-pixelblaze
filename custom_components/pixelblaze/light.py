@@ -71,9 +71,7 @@ async def async_setup_entry(
         if state is None:
             return
         new_pickers = {
-            name
-            for name, value in state.active_controls.items()
-            if _is_color_picker(name, value)
+            name for name, value in state.active_controls.items() if _is_color_picker(name, value)
         }
         added = new_pickers - known_pickers
         if added:
@@ -185,9 +183,7 @@ class PixelblazeColorPickerLight(PixelblazeEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_color_mode = ColorMode.HS
 
-    def __init__(
-        self, coordinator: PixelblazeDataUpdateCoordinator, control_name: str
-    ) -> None:
+    def __init__(self, coordinator: PixelblazeDataUpdateCoordinator, control_name: str) -> None:
         super().__init__(coordinator)
         self._control_name = control_name
         self._attr_unique_id = f"{self._device_id}_color_{control_name}"
