@@ -183,8 +183,41 @@ class PixelblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         host = str(discovery_info["host"])
         raw_id = discovery_info.get("id")
         device_id = _canonical_device_id(raw_id) or str(raw_id or host)
+
+        # Primary dedup: unique_id-based. Catches entries created on or after
+        # 0.2.5, and any older entry that the startup migration could
+        # canonicalize from its stored pixelblaze_id.
         await self.async_set_unique_id(device_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        # Defensive fallback: an older entry may have ``unique_id`` set to the
+        # host string (because pixelblaze_id was empty at config time) or some
+        # other non-hex value the startup migration could not normalize. Walk
+        # every current entry and match by the stored pixelblaze_id field or
+        # by host, then heal the entry's unique_id so future flows dedup
+        # cleanly. Without this, the device keeps reappearing under
+        # "Discovered" forever.
+        for entry in self._async_current_entries(include_ignore=False):
+            existing_host = entry.data.get(CONF_HOST)
+            existing_pb_id = _canonical_device_id(entry.data.get(CONF_PIXELBLAZE_ID))
+            if existing_pb_id == device_id or (
+                existing_host is not None and existing_host == host
+            ):
+                if entry.unique_id != device_id:
+                    _LOGGER.debug(
+                        "Healing legacy unique_id %r → %r for entry %s (host=%s)",
+                        entry.unique_id,
+                        device_id,
+                        entry.entry_id,
+                        host,
+                    )
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        unique_id=device_id,
+                        data={**entry.data, CONF_HOST: host, CONF_PIXELBLAZE_ID: device_id},
+                    )
+                return self.async_abort(reason="already_configured")
+
         self._host = host
         self._discovered_id = device_id
         self._discovered_name = str(discovery_info.get("name") or device_id)

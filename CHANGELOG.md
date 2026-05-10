@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-05-10
+
+### Fixed
+
+- Stronger discovery dedup. The 0.3.0 fix only worked when the existing
+  config entry had a unique_id the migration could canonicalize from the
+  stored `pixelblaze_id`. Entries from older versions where `pixelblaze_id`
+  was missing at config time stored the host as the unique_id; the
+  migration then had nothing to work with and the device kept showing up
+  under "Discovered". The integration_discovery step now also matches
+  existing entries by stored `pixelblaze_id` **or** by host, and on a
+  match heals the entry's unique_id to the canonical `pb:xxxxxxxx` form
+  before aborting.
+
 ## [0.3.0] - 2026-05-10
 
 First public release. Renamed from the unreleased 0.2.5 in-flight version
