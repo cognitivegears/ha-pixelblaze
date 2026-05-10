@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-05-10
+
+### Fixed
+
+- Capped `requires-python` at `<3.15` in `pyproject.toml` so Dependabot's uv
+  resolver no longer fails with a "no solution found" error when splitting
+  on `python_full_version >= '3.15'`. Home Assistant currently requires
+  Python 3.14.2 and does not yet support 3.15; the lower bound stays at
+  3.13.2 so the integration still installs into HA 2026.2.x.
+
 ## [0.2.3] - 2026-05-10
 
 ### Changed
@@ -176,7 +186,8 @@ Initial public release.
 - Pixelblaze does not advertise mDNS, so zeroconf-style discovery is
   not supported. DHCP and UDP beacon discovery cover the common cases.
 
-[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.0...v0.2.1
