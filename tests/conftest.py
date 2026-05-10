@@ -59,7 +59,7 @@ class FakePixelblaze:
     def getConfigSettings(self) -> dict[str, Any]:
         return {
             "name": FakePixelblaze.state_overrides.get("name", "Test Pixelblaze"),
-            "pixelblaze_id": FakePixelblaze.state_overrides.get("pixelblaze_id", "pb-test-1"),
+            "pixelblaze_id": FakePixelblaze.state_overrides.get("pixelblaze_id", "deadbeef"),
             "ip": self.ipAddress,
             "pixelCount": FakePixelblaze.state_overrides.get("pixelCount", 64),
             "brightness": self._brightness,
@@ -216,8 +216,8 @@ async def setup_entry(hass: Any) -> Any:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test Pixelblaze",
-        unique_id="pb-test-1",
-        data={"host": "1.2.3.4", CONF_PIXELBLAZE_ID: "pb-test-1"},
+        unique_id="pb:deadbeef",
+        data={"host": "1.2.3.4", CONF_PIXELBLAZE_ID: "pb:deadbeef"},
         options={CONF_DISABLE_BEACON: True},
     )
     entry.add_to_hass(hass)

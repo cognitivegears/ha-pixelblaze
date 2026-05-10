@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-05-10
+
+### Fixed
+
+- Already-configured devices no longer reappear under "Discovered" in the
+  integrations list. The user flow stored the raw hex `pixelblazeId` as the
+  config-entry unique_id while UDP-beacon discovery emitted `pb:xxxxxxxx`,
+  so `_abort_if_unique_id_configured` never matched. Both paths now produce
+  a canonical `pb:xxxxxxxx` id, and existing entries are migrated on load.
+
+### Changed
+
+- Bumped `hacs.json` `homeassistant` minimum from `2025.1.0` to `2026.2.0` to
+  match the actual floor implied by `requires-python = ">=3.13.2"` (Home
+  Assistant 2026.2 is the first release shipping Python 3.14). Prep for HACS
+  default-repository submission.
+
+### Documentation
+
+- Expanded `SECURITY.md` with a section on runtime vs. dev dependencies and
+  why open Dependabot alerts on `uv.lock` (e.g. the upstream `uv`/`pytest`
+  pins HA inherits) do not affect end-user installs.
+
 ## [0.2.4] - 2026-05-10
 
 ### Fixed

@@ -281,8 +281,8 @@ async def test_number_entity_unavailable_when_control_dropped(hass: Any) -> None
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test Pixelblaze",
-        unique_id="pb-test-1",
-        data={"host": "1.2.3.4", CONF_PIXELBLAZE_ID: "pb-test-1"},
+        unique_id="pb:deadbeef",
+        data={"host": "1.2.3.4", CONF_PIXELBLAZE_ID: "pb:deadbeef"},
         options={CONF_DISABLE_BEACON: True},
     )
     entry.add_to_hass(hass)

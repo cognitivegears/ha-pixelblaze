@@ -25,7 +25,7 @@ async def test_user_flow_success(hass) -> None:
     )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_HOST] == "1.2.3.4"
-    assert result2["data"][CONF_PIXELBLAZE_ID] == "pb-test-1"
+    assert result2["data"][CONF_PIXELBLAZE_ID] == "pb:deadbeef"
     assert result2["title"] == "Test Pixelblaze"
 
 
@@ -75,3 +75,43 @@ async def test_integration_discovery_flow(hass) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"][CONF_HOST] == "1.2.3.4"
+
+
+async def test_discovery_aborts_for_user_configured_entry(hass) -> None:
+    """A user-flow entry must dedup against subsequent UDP-beacon discovery.
+
+    Regression: pre-0.2.5 the user flow stored the raw hex ``pixelblazeId`` as
+    the entry unique_id while UDP discovery emitted ``pb:xxxxxxxx``. The
+    mismatch made already-configured devices reappear under "Discovered".
+    """
+    # Set up via user flow first.
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    created = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4", CONF_DEVICE_NAME: ""},
+    )
+    assert created["type"] is FlowResultType.CREATE_ENTRY
+
+    # Now a beacon arrives for the same device — should abort.
+    discovery = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "integration_discovery"},
+        data={"host": "1.2.3.4", "id": "pb:deadbeef", "name": "Lobby Strip"},
+    )
+    assert discovery["type"] is FlowResultType.ABORT
+    assert discovery["reason"] == "already_configured"
+
+
+async def test_canonical_device_id_normalizes_legacy_formats() -> None:
+    from custom_components.pixelblaze.config_flow import _canonical_device_id
+
+    assert _canonical_device_id("deadbeef") == "pb:deadbeef"
+    assert _canonical_device_id("DEADBEEF") == "pb:deadbeef"
+    assert _canonical_device_id("pb:deadbeef") == "pb:deadbeef"
+    assert _canonical_device_id(0xDEADBEEF) == "pb:deadbeef"
+    # Short hex gets zero-padded to 8 chars.
+    assert _canonical_device_id("abc") == "pb:00000abc"
+    # Non-hex / empty returns None so callers fall back to host.
+    assert _canonical_device_id("not-hex") is None
+    assert _canonical_device_id("") is None
+    assert _canonical_device_id(None) is None
