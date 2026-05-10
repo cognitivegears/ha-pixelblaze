@@ -91,7 +91,7 @@ set_sequencer_mode:
       selector:
         select:
           options:
-            - off
+            - "off"
             - shuffle_all
             - playlist
 
@@ -214,7 +214,7 @@ activate_scene:
       selector:
         select:
           options:
-            - off
+            - "off"
             - shuffle_all
             - playlist
 

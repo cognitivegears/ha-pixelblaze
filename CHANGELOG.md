@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-10
+
 ### Added
 
 - Color-picker `light` entities. Every `hsvPicker*` control exported by the
@@ -23,6 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with the active pattern's exported variables keyed by `device_id`. Lets
   scripts read variable state for templating without watching coordinator
   state through a sensor.
+
+### Fixed
+
+- Quoted `"off"` in the `services.yaml` `select` selectors for
+  `set_sequencer_mode` and `activate_scene`. YAML 1.1 parses bare `off` as
+  the boolean `False`, which failed HA's selector schema and caused HA to
+  discard the entire `services.yaml` — so no Pixelblaze action showed any
+  input fields in the automation editor.
+- 500 error when opening the config flow.
 
 ## [0.1.0] - 2026-05-09
 
@@ -86,5 +97,6 @@ Initial public release.
 - Pixelblaze does not advertise mDNS, so zeroconf-style discovery is
   not supported. DHCP and UDP beacon discovery cover the common cases.
 
-[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/cognitivegears/ha-pixelblaze/releases/tag/v0.1.0
