@@ -200,9 +200,7 @@ class PixelblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries(include_ignore=False):
             existing_host = entry.data.get(CONF_HOST)
             existing_pb_id = _canonical_device_id(entry.data.get(CONF_PIXELBLAZE_ID))
-            if existing_pb_id == device_id or (
-                existing_host is not None and existing_host == host
-            ):
+            if existing_pb_id == device_id or (existing_host is not None and existing_host == host):
                 if entry.unique_id != device_id:
                     _LOGGER.debug(
                         "Healing legacy unique_id %r → %r for entry %s (host=%s)",
