@@ -102,6 +102,40 @@ async def test_discovery_aborts_for_user_configured_entry(hass) -> None:
     assert discovery["reason"] == "already_configured"
 
 
+async def test_discovery_heals_legacy_host_unique_id(hass) -> None:
+    """Entries from very old versions stored the host as unique_id.
+
+    The startup migration can't canonicalize a non-hex unique_id, so the
+    discovery flow has a fallback: if any existing entry's host or stored
+    pixelblaze_id matches the discovered device, abort and rewrite the
+    entry's unique_id to the canonical form. Without this fallback, a
+    device whose original setup pre-dated `pixelblaze_id` propagation
+    would keep reappearing under "Discovered" forever.
+    """
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    # Simulate a legacy entry: unique_id is the host, pixelblaze_id was never
+    # populated correctly, so it also stores the host.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Pixelblaze",
+        unique_id="192.168.1.160",
+        data={CONF_HOST: "192.168.1.160", CONF_PIXELBLAZE_ID: "192.168.1.160"},
+    )
+    entry.add_to_hass(hass)
+
+    discovery = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "integration_discovery"},
+        data={"host": "192.168.1.160", "id": "pb:0064c4ee", "name": "Lobby Strip"},
+    )
+    assert discovery["type"] is FlowResultType.ABORT
+    assert discovery["reason"] == "already_configured"
+    # Entry should have been healed to the canonical form.
+    assert entry.unique_id == "pb:0064c4ee"
+    assert entry.data[CONF_PIXELBLAZE_ID] == "pb:0064c4ee"
+
+
 async def test_canonical_device_id_normalizes_legacy_formats() -> None:
     from custom_components.pixelblaze.config_flow import _canonical_device_id
 
