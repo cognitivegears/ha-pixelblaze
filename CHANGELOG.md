@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-05-17
+
+### Fixed
+
+- Executor-pool poisoning when configured Pixelblaze devices are offline.
+  The upstream `pixelblaze-client` library is synchronous; calls dispatched
+  to Home Assistant's executor would block inside `sock.connect` for the
+  full kernel TCP timeout (~75s) when the device was unreachable. With
+  multiple offline devices the 64-thread SyncWorker pool filled and HA Core
+  hung — the frontend served static HTML but API requests timed out,
+  requiring a container restart. The integration now runs an async
+  TCP-reachability probe (2s budget) on the event loop before every
+  executor dispatch, so an offline device never reaches the sync library.
+  The existing per-call `asyncio.timeout` remains as defense-in-depth for
+  the rarer case where TCP accepts but the websocket handshake stalls.
+
+### Added
+
+- Coordinator circuit-breaker: after three consecutive failed polls, the
+  update interval doubles each cycle up to a five-minute ceiling. On the
+  first successful poll the base interval is restored. Stops an always-off
+  device from churning the probe every 10s for hours.
+
+### Notes
+
+- A future release should replace `pixelblaze-client` with an aiohttp-based
+  async client (or wrap each method in a structured `asyncio.to_thread`
+  discipline). The current fix bounds the failure mode but the underlying
+  synchronous transport is the root cause.
+
 ## [0.3.1] - 2026-05-10
 
 ### Fixed
@@ -226,7 +256,8 @@ Initial public release.
 - Pixelblaze does not advertise mDNS, so zeroconf-style discovery is
   not supported. DHCP and UDP beacon discovery cover the common cases.
 
-[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.3.1...v0.3.2
 [0.2.4]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/cognitivegears/ha-pixelblaze/compare/v0.2.1...v0.2.2

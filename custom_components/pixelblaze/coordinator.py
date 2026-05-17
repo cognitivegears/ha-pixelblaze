@@ -17,6 +17,12 @@ from .api import (
 )
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PATTERN_LIST_REFRESH_INTERVAL
 
+# Circuit-breaker: after this many consecutive failed polls, start backing
+# off the update interval so an offline device doesn't churn the pre-flight
+# probe every 10s for hours.
+_BACKOFF_AFTER_FAILURES = 3
+_BACKOFF_CEILING = timedelta(minutes=5)
+
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
@@ -36,19 +42,24 @@ class PixelblazeDataUpdateCoordinator(DataUpdateCoordinator[PixelblazeState]):
         client: PixelblazeClient,
         scan_interval: timedelta | None = None,
     ) -> None:
+        base_interval = scan_interval or DEFAULT_SCAN_INTERVAL
         super().__init__(
             hass,
             _LOGGER,
             # Use entry_id (opaque) instead of title (often the IP) so log
             # lines don't leak network info on UpdateFailed.
             name=f"{DOMAIN}:{entry.entry_id}",
-            update_interval=scan_interval or DEFAULT_SCAN_INTERVAL,
+            update_interval=base_interval,
         )
         self.config_entry = entry
         self.client = client
         self._last_pattern_id: str | None = None
         self._last_pattern_list_refresh: float | None = None
         self._force_pattern_list_refresh: bool = False
+        # Circuit-breaker state. ``_base_interval`` is what we restore the
+        # poll cadence to once the device starts responding again.
+        self._base_interval = base_interval
+        self._consec_failures = 0
 
     async def _async_update_data(self) -> PixelblazeState:
         """Fetch a state snapshot. Raise ``UpdateFailed`` on connection errors."""
@@ -66,7 +77,10 @@ class PixelblazeDataUpdateCoordinator(DataUpdateCoordinator[PixelblazeState]):
                 self._last_pattern_id, force_pattern_list=force_refresh
             )
         except PixelblazeConnectionError as exc:
+            self._record_failure()
             raise UpdateFailed(f"Cannot reach Pixelblaze: {exc}") from exc
+
+        self._record_success()
 
         if force_refresh:
             self._last_pattern_list_refresh = now
@@ -78,6 +92,45 @@ class PixelblazeDataUpdateCoordinator(DataUpdateCoordinator[PixelblazeState]):
             _LOGGER.debug("Active pattern changed: %s -> %s", prev, state.active_pattern_id)
 
         return state
+
+    def _record_failure(self) -> None:
+        """Bump the failure counter and apply exponential backoff.
+
+        After ``_BACKOFF_AFTER_FAILURES`` consecutive failures, double the
+        poll interval each cycle up to ``_BACKOFF_CEILING``. This keeps an
+        always-off device from re-running the (already-bounded) reachability
+        probe every base interval forever.
+        """
+        self._consec_failures += 1
+        n = self._consec_failures
+        if n < _BACKOFF_AFTER_FAILURES:
+            return
+        base_s = self._base_interval.total_seconds()
+        # n == _BACKOFF_AFTER_FAILURES gives 2x base; each further failure doubles.
+        factor = 2 ** (n - _BACKOFF_AFTER_FAILURES + 1)
+        new_s = min(base_s * factor, _BACKOFF_CEILING.total_seconds())
+        new_interval = timedelta(seconds=new_s)
+        if self.update_interval != new_interval:
+            self.update_interval = new_interval
+            _LOGGER.debug(
+                "Pixelblaze %s offline for %d cycles; polling backed off to %ss",
+                self.config_entry.entry_id,
+                n,
+                int(new_s),
+            )
+
+    def _record_success(self) -> None:
+        """Reset the failure counter and restore the base poll interval."""
+        if self._consec_failures == 0:
+            return
+        self._consec_failures = 0
+        if self.update_interval != self._base_interval:
+            self.update_interval = self._base_interval
+            _LOGGER.debug(
+                "Pixelblaze %s reachable again; poll interval restored to %ss",
+                self.config_entry.entry_id,
+                int(self._base_interval.total_seconds()),
+            )
 
     # ---- Optimistic-update helpers ----------------------------------------
 
