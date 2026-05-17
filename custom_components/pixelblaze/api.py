@@ -228,9 +228,7 @@ class PixelblazeClient:
         handshake stalls.
         """
         if not await async_is_reachable(self._host):
-            raise PixelblazeConnectionError(
-                f"Pixelblaze at {self._host} not reachable"
-            )
+            raise PixelblazeConnectionError(f"Pixelblaze at {self._host} not reachable")
 
     async def async_connect(self) -> None:
         """Open the websocket. Idempotent."""

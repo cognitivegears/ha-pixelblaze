@@ -72,9 +72,7 @@ async def test_unreachable_device_skips_executor(hass: Any) -> None:
             "custom_components.pixelblaze.api.async_is_reachable",
             return_value=False,
         ),
-        patch.object(
-            hass, "async_add_executor_job", side_effect=AssertionError("must not run")
-        ),
+        patch.object(hass, "async_add_executor_job", side_effect=AssertionError("must not run")),
         pytest.raises(PixelblazeConnectionError),
     ):
         await client.async_fetch_state(None)
