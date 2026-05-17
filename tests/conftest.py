@@ -187,6 +187,26 @@ def fake_pixelblaze_module() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
+def fake_reachable(monkeypatch: Any, request: Any) -> None:
+    """Default the async TCP-reachability probe to True for unit tests.
+
+    The real probe calls ``asyncio.open_connection`` and would fail against
+    the synthetic 1.2.3.4 host that fixtures use. Integration tests opt out
+    via the ``integration`` marker so they exercise the live probe.
+    """
+    if request.node.get_closest_marker("integration"):
+        return
+
+    async def _always_reachable(*_args: Any, **_kwargs: Any) -> bool:
+        return True
+
+    monkeypatch.setattr(
+        "custom_components.pixelblaze.api.async_is_reachable",
+        _always_reachable,
+    )
+
+
+@pytest.fixture(autouse=True)
 def avoid_safe_shutdown_thread(monkeypatch: Any, request: Any) -> None:
     """Prevent HA's safe-shutdown background thread in unit tests."""
     if request.node.get_closest_marker("integration"):

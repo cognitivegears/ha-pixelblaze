@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
+from .const import DEFAULT_PORT
+
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
@@ -32,6 +34,37 @@ _LOGGER = logging.getLogger(__name__)
 # below is the only reliable timeout boundary.
 DEFAULT_OPERATION_TIMEOUT = 8.0
 SOCKET_RECV_TIMEOUT = 2.0
+# Async TCP-connect probe used to gate every executor dispatch. Bounded short
+# so an offline device never holds an executor thread inside the sync lib's
+# ``sock.connect`` (which respects only the kernel's ~75s timeout). Must stay
+# under DEFAULT_OPERATION_TIMEOUT to keep the per-call budget intact.
+REACHABILITY_TIMEOUT = 2.0
+
+
+async def async_is_reachable(
+    host: str, port: int = DEFAULT_PORT, timeout: float = REACHABILITY_TIMEOUT
+) -> bool:
+    """Quick async TCP-connect probe.
+
+    Returns True if a TCP connection to ``host:port`` is accepted within
+    ``timeout`` seconds, False otherwise. This is the gate that prevents an
+    unreachable device from being dispatched into the executor (where
+    ``websocket-client``'s blocking ``sock.connect`` would pin a SyncWorker
+    thread for the full kernel TCP timeout).
+    """
+    writer: asyncio.StreamWriter | None = None
+    try:
+        async with asyncio.timeout(timeout):
+            _reader, writer = await asyncio.open_connection(host, port)
+    except (TimeoutError, OSError):
+        return False
+    else:
+        return True
+    finally:
+        if writer is not None:
+            with contextlib.suppress(Exception):
+                writer.close()
+                await writer.wait_closed()
 
 
 class PixelblazeError(Exception):
@@ -184,10 +217,24 @@ class PixelblazeClient:
     def host(self) -> str:
         return self._host
 
+    async def _async_preflight(self) -> None:
+        """Async TCP-connect probe; raises if the device isn't reachable.
+
+        Always runs on the event loop — never dispatches to the executor —
+        so an offline device can't pin a SyncWorker. This is the primary
+        defense against the executor-pool poisoning failure mode; the
+        ``asyncio.timeout`` around the executor dispatch below is defense
+        in depth for the rarer case where TCP accepts but the websocket
+        handshake stalls.
+        """
+        if not await async_is_reachable(self._host):
+            raise PixelblazeConnectionError(f"Pixelblaze at {self._host} not reachable")
+
     async def async_connect(self) -> None:
         """Open the websocket. Idempotent."""
         if self._pb is not None:
             return
+        await self._async_preflight()
         try:
             async with asyncio.timeout(self._operation_timeout):
                 self._pb = await self._hass.async_add_executor_job(self._sync_connect)
@@ -234,16 +281,27 @@ class PixelblazeClient:
                 ws.close()
 
     async def _force_reconnect(self) -> None:
-        """Drop the current ws so the next call reconnects fresh."""
+        """Drop the current ws so the next call reconnects fresh.
+
+        Bounded with a timeout: a wedged websocket can block ``close()`` too,
+        and we must never let cleanup itself poison an executor thread.
+        """
         pb = self._pb
         self._pb = None
-        if pb is not None:
-            await self._hass.async_add_executor_job(self._sync_close, pb)
+        if pb is None:
+            return
+        try:
+            async with asyncio.timeout(2.0):
+                await self._hass.async_add_executor_job(self._sync_close, pb)
+        except (TimeoutError, Exception) as exc:
+            _LOGGER.debug("Force-reconnect close ignored: %s", exc)
 
     async def _run(self, fn_name: str, *args: Any, **kwargs: Any) -> Any:
         """Invoke a sync method on the underlying ``Pixelblaze`` under the lock."""
         if self._pb is None:
             await self.async_connect()
+        else:
+            await self._async_preflight()
         async with self._lock:
             try:
                 async with asyncio.timeout(self._operation_timeout):
@@ -283,6 +341,8 @@ class PixelblazeClient:
         """
         if self._pb is None:
             await self.async_connect()
+        else:
+            await self._async_preflight()
         async with self._lock:
             try:
                 async with asyncio.timeout(self._operation_timeout):
